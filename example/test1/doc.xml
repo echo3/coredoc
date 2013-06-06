@@ -1,0 +1,8 @@
+<coredoc>
+ <title>TestOne API Specification</title>
+
+ <modules>
+  <module>Test1.js</module>
+ </modules>
+
+</coredoc>

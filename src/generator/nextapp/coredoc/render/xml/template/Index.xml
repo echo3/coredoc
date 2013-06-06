@@ -1,0 +1,19 @@
+<coredoc-index>
+
+<title>$title</title>
+<home>$home</home>
+
+<namespaces>
+#foreach( $namespace in $namespaces )
+<namespace name="$namespace"/>
+#end
+</namespaces>
+
+<classes>
+#foreach( $class in $classes )
+<class name="$class.getQualifiedName()" #if ( $class.getSuperclass() ) super="$class.getSuperclass().getQualifiedName()" #end
+/>
+#end
+</classes>
+
+</coredoc-index>

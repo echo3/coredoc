@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+
+<project name="CoreDoc" default="dist" basedir=".">
+
+    <property environment="env"/>
+    <property file="ant.properties"/>
+    
+    <patternset id="fileset.resources">
+        <include name="**/*properties"/>
+        <include name="**/*html"/>
+        <include name="**/*css"/>
+        <include name="**/*js"/>
+        <include name="**/*gif"/>
+        <include name="**/*jpg"/>
+        <include name="**/*png"/>
+        <include name="**/*xml"/>
+        <include name="**/*stylesheet"/>
+    </patternset>
+
+    <path id="generator.lib">
+        <fileset dir="${dir.lib}">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <!-- Minimize -->
+    <target name="minimize" depends="clean" 
+            description="Removes all non-essential files, including Eclipse temporary/build output files">
+        <delete dir="${dir.temp}"/>
+    </target>
+    
+    <!-- Clean -->
+    <target name="clean"
+            description="Clears all generated files, including build directories, distributables, and documentation">
+        <delete dir="${dir.build}"/>
+        <delete dir="${dir.dist}"/>
+        <delete dir="${dir.release}"/>
+        <delete dir="${dir.testoutput}"/>
+    </target>
+        
+    <target name="compile.generator">
+        <mkdir dir="${dir.build.generator}"/>
+        <javac srcdir="${dir.src.generator}" destdir="${dir.build.generator}" debug="${debug}" deprecation="yes">
+            <classpath refid="generator.lib"/>
+        </javac>
+        <copy todir="${dir.build.generator}">
+            <fileset dir="${dir.src.generator}">
+                <patternset refid="fileset.resources"/>
+            </fileset>
+        </copy>
+    </target>
+    
+    <target name="dist.generator" depends="clean,compile.generator">
+        <mkdir dir="${dir.dist.jar}"/>
+        <jar jarfile="${dir.dist.jar}/${jarfile.generator}" basedir="${dir.build.generator}">
+            <manifest>
+                <attribute name="Main-Class" value="nextapp.coredoc.CoreDoc"/>
+                <attribute name="Class-Path" value="lib/velocity-1.5.jar lib/commons-collections-3.2.jar lib/commons-lang-2.2.jar"/>
+            </manifest>
+        </jar>
+        <mkdir dir="${dir.dist.jar}/lib"/>
+        <copy todir="${dir.dist.jar}/lib">
+            <fileset dir="${dir.lib}">
+                <include name="*.jar"/>
+            </fileset>
+        </copy>
+    </target>
+    
+    <target name="dist.viewer" depends="clean">
+        <concat destfile="${dir.build.viewer}/Concat.js" fixlastline="true">
+            <filelist dir="${dir.src.viewer}/lib/corejs/">
+                <file name="Core.js"/>
+                <file name="Core.Web.js"/>
+            </filelist>
+            <filelist dir="${dir.src.viewer}/lib/echo/">
+                <file name="Application.js"/>
+                <file name="Render.js"/>
+                <file name="Sync.js"/>
+                <file name="Serial.js"/>
+                <file name="Client.js"/>
+                <file name="FreeClient.js"/>
+            	
+                <file name="Sync.ArrayContainer.js"/>
+                <file name="Sync.Button.js"/>
+                <file name="Sync.Composite.js"/>
+                <file name="Sync.ContentPane.js"/>
+                <file name="Sync.Grid.js"/>
+                <file name="Sync.Label.js"/>
+                <file name="Sync.List.js"/>
+                <file name="Sync.SplitPane.js"/>
+                <file name="Sync.TextComponent.js"/>
+                <file name="Sync.ToggleButton.js"/>
+                <file name="Sync.WindowPane.js"/>
+            </filelist>
+            <filelist dir="${dir.src.viewer}/lib/extras/">
+                <file name="Extras.js"/>
+                <file name="Application.AccordionPane.js"/>
+                <file name="Sync.AccordionPane.js"/>
+                <file name="Application.Menu.js"/>
+                <file name="Sync.Menu.js"/>
+                <file name="Application.TransitionPane.js"/>
+                <file name="Sync.TransitionPane.js"/>
+            </filelist>
+            <filelist dir="${dir.src.viewer}/app/">
+                <file name="Main.js"/>
+                <file name="Util.js"/>
+                <file name="DocModel.js"/>
+                <file name="DocComponents.js"/>
+                <file name="Default.StyleSheet.js"/>
+                <file name="Messages.js"/>
+            </filelist>
+        </concat>
+        <java fork="true" jar="${jar.yuicompressor}" output="${dir.build.viewer}/AppCompressed.js">
+            <arg value="${dir.build.viewer}/Concat.js"/>
+        </java>
+        <delete file="${dir.build.viewer}/Concat.js"/>
+    </target>
+	
+    <target name="dist" depends="dist.generator"/>
+    
+    <target name="test.echo3.html">
+        <delete dir="${dir.testoutput.echo}/html"/>
+        <mkdir dir="${dir.testoutput.echo}/html"/>
+        <java fork="true" jar="${dir.dist.jar}/${jarfile.generator}">
+            <sysproperty key="output" value="${dir.testoutput.echo}/html"/>
+            <sysproperty key="base.echo" value="${example.echo.echosrc}"/>
+            <sysproperty key="base.extras" value="${example.echo.extrassrc}"/>
+            <sysproperty key="base.filetransfer" value="${example.echo.filetransfersrc}"/>
+            <arg value="${example.echo.config}"/>
+        </java>
+    </target>
+    
+	<target name="test.echo3.updateviewer">
+        <copy todir="${dir.testoutput.echo}/cdx">
+            <fileset dir="${dir.src.viewer}"/>
+        </copy>
+	</target>
+	
+    <target name="test.echo3.cdx">
+        <delete dir="${dir.testoutput.echo}/cdx"/>
+        <mkdir dir="${dir.testoutput.echo}/cdx"/>
+        <copy todir="${dir.testoutput.echo}/cdx">
+            <fileset dir="${dir.src.viewer}"/>
+        </copy>
+        <mkdir dir="${dir.testoutput.echo}/cdx/content"/>
+        <java fork="true" jar="${dir.dist.jar}/${jarfile.generator}">
+            <sysproperty key="render" value="xml"/>
+            <sysproperty key="output" value="${dir.testoutput.echo}/cdx/content"/>
+            <sysproperty key="base.echo" value="${example.echo.echosrc}"/>
+            <sysproperty key="base.extras" value="${example.echo.extrassrc}"/>
+            <sysproperty key="base.filetransfer" value="${example.echo.filetransfersrc}"/>
+            <arg value="${example.echo.config}"/>
+        </java>
+    </target>
+    
+    <target name="test.test1.cdx">
+        <delete dir="${dir.testoutput.test1}"/>
+        <mkdir dir="${dir.testoutput.test1}"/>
+        <copy todir="${dir.testoutput.test1}">
+            <fileset dir="${dir.src.viewer}"/>
+        </copy>
+        <mkdir dir="${dir.testoutput.test1}/content"/>
+        <java fork="true" jar="${dir.dist.jar}/${jarfile.generator}">
+            <sysproperty key="render" value="xml"/>
+            <sysproperty key="output" value="${dir.testoutput.test1}/content"/>
+            <arg value="${example.test1.config}"/>
+        </java>
+    </target>
+    
+    <target name="fulltest.html" depends="clean,dist,test.echo3.html"/>
+    <target name="fulltest.cdx" depends="clean,dist,test.echo3.cdx"/>
+    
+</project>

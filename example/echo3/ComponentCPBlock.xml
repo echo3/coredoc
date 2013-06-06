@@ -1,0 +1,13 @@
+<custom-block name="Component Properties">
+
+#foreach ($property in $tagRender.getPropertyNames($classBlock))
+<item>
+<name>$property.getName()</name>
+#if ($property.getType())
+<type>$property.getType()</type>
+#end
+<description>$property.getDescription()</description>
+</item>
+#end
+
+</custom-block>
